@@ -470,12 +470,54 @@ header h1 {
     cursor: pointer;
     margin-top: 10px;
 }
+
+.account-switch {
+    display: flex;
+    align-items: center;
+    margin-top: 10px;
+
+}
+
+.account-switch select {
+    flex: 1;
+    padding: 10px;
+    border: 1px solid #ddd;
+    border-radius: 8px;
+    font-size: 14px;
+}
+
+
+.btn-add-account {
+    width: 30px;
+    height: 30px;
+    background: #667eea;
+    color: white;
+    border: none;
+    border-radius: 50%;
+    font-size: 18px;
+    cursor: pointer;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    margin-left: 10px;
+}
+
     </style>
 </head>
 <body>
     <div class="app-container">
         <header>
             <h1>Keuangan Saya</h1>
+            <!-- Tambahkan di header -->
+            <div class="account-switch">
+                <select id="选中的akun" onchange="switchAccount()">
+                    <option value="saya">👤 Saya</option>
+                    <option value="pasangan">👫 Pasangan</option>
+                    <option value="keluarga">👨‍👩‍👧‍👦 Keluarga</option>
+                </select>
+                <button class="btn-add-account" onclick="addNewAccount()">+</button>
+            </div>
+            
         </header>
 
         <section class="summary">
@@ -493,20 +535,7 @@ header h1 {
                     <h3 id="pengeluaran-display">Rp 0</h3>
                 </div>
             </div>
-        </section>
 
-        <section class="chart-section">
-            <h3>📊 Grafik Pengeluaran</h3>
-            <div class="chart-container">
-                <canvas id="pieChart"></canvas>
-            </div>
-            <div class="chart-container">
-                <canvas id="barChart"></canvas>
-            </div>
-        </section>
-
-        <section class="form-section">
-            <h3>Tambah Transaksi</h3>
             <div class="filter-section">
                 <div class="filter-row">
                     <select id="filter-bulan">
@@ -527,6 +556,21 @@ header h1 {
                     <button id="btn-export" class="btn-export">📥 Export</button>
                 </div>
             </div>
+        </section>
+
+        <section class="chart-section">
+            <h3>📊 Grafik Pengeluaran</h3>
+            <div class="chart-container">
+                <canvas id="pieChart"></canvas>
+            </div>
+            <div class="chart-container">
+                <canvas id="barChart"></canvas>
+            </div>
+        </section>
+
+        <section class="form-section">
+            <h3>Tambah Transaksi</h3>
+            
             <form id="form-transaksi">
                 <input type="number" id="jumlah" placeholder="Jumlah uang" required>
                 <select id="tipe">
@@ -1032,6 +1076,29 @@ if ('serviceWorker' in navigator) {
             .then(function(res) { console.log('SW Registered', res.scope); })
             .catch(function(err) { console.log('SW Failed', err); });
     });
+}
+
+// Rubah di loadData dan simpanData:
+// Ganti 'keuanganData' jadi 'keuanganData_' + currentAccount
+
+var currentAccount = 'saya';
+
+function loadData() {
+    var saved = localStorage.getItem('keuanganData_' + currentAccount);
+    if (saved) transactions = JSON.parse(saved);
+    var savedBudget = localStorage.getItem('keuanganBudget_' + currentAccount);
+    if (savedBudget) budgets = JSON.parse(savedBudget);
+    updateTampilan();
+}
+
+function simpanData() {
+    localStorage.setItem('keuanganData_' + currentAccount, JSON.stringify(transactions));
+    localStorage.setItem('keuanganBudget_' + currentAccount, JSON.stringify(budgets));
+}
+
+function switchAccount() {
+    currentAccount = document.getElementById('选中的akun').value;
+    loadData();
 }
 
 // ===== MULAI APLIKASI =====
