@@ -4,7 +4,6 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Keuangan Pribadi</title>
-    <!-- TAMBAHKAN:PWA Meta Tags -->
     <meta name="theme-color" content="#667eea">
     <meta name="description" content="Aplikasi pengelolaan keuangan pribadi">
     <link rel="manifest" href="manifest.json">
@@ -335,7 +334,7 @@ header h1 {
     width: 100%;
     height: 100%;
     background: rgba(0,0,0,0.5);
-    display: flex;
+    display: none;
     justify-content: center;
     align-items: center;
     z-index: 1000;
@@ -402,6 +401,75 @@ header h1 {
     font-size: 14px;
     cursor: pointer;
 }
+
+/* ===== FILTER SECTION ===== */
+.filter-section {
+    background: white;
+    border-radius: 12px;
+    padding: 15px;
+    margin-bottom: 20px;
+    box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+}
+
+.filter-row {
+    display: flex;
+    gap: 10px;
+}
+
+.filter-row select {
+    flex: 1;
+    padding: 10px;
+    border: 1px solid #ddd;
+    border-radius: 8px;
+    font-size: 14px;
+}
+
+.btn-export {
+    padding: 10px 15px;
+    background: #10b981;
+    color: white;
+    border: none;
+    border-radius: 8px;
+    font-size: 14px;
+    cursor: pointer;
+}
+
+.btn-export:hover {
+    background: #059669;
+}
+
+.export-option {
+    display: flex;
+    align-items: center;
+    padding: 15px;
+    border: 1px solid #ddd;
+    border-radius: 8px;
+    margin-bottom: 10px;
+    cursor: pointer;
+    transition: background 0.3s;
+}
+
+.export-option:hover {
+    background: #f5f5f5;
+}
+
+.export-option span {
+    margin-left: 10px;
+    font-size: 14px;
+    color: #333;
+}
+
+.modal-close {
+    width: 100%;
+    padding: 12px;
+    background: #eee;
+    color: #333;
+    border: none;
+    border-radius: 8px;
+    font-size: 14px;
+    cursor: pointer;
+    margin-top: 10px;
+}
     </style>
 </head>
 <body>
@@ -439,6 +507,26 @@ header h1 {
 
         <section class="form-section">
             <h3>Tambah Transaksi</h3>
+            <div class="filter-section">
+                <div class="filter-row">
+                    <select id="filter-bulan">
+                        <option value="semua">Semua Bulan</option>
+                        <option value="1">Januari</option>
+                        <option value="2">Februari</option>
+                        <option value="3">Maret</option>
+                        <option value="4">April</option>
+                        <option value="5">Mei</option>
+                        <option value="6">Juni</option>
+                        <option value="7">Juli</option>
+                        <option value="8">Agustus</option>
+                        <option value="9">September</option>
+                        <option value="10">Oktober</option>
+                        <option value="11">November</option>
+                        <option value="12">Desember</option>
+                    </select>
+                    <button id="btn-export" class="btn-export">📥 Export</button>
+                </div>
+            </div>
             <form id="form-transaksi">
                 <input type="number" id="jumlah" placeholder="Jumlah uang" required>
                 <select id="tipe">
@@ -466,12 +554,10 @@ header h1 {
             </form>
         </section>
 
-        <!-- Section Budget -->
         <section class="budget-section">
             <h3>🎯 Anggaran Bulanan</h3>
             <div id="budget-list">
-                <!-- Budget akan muncul di sini -->
-            </div>
+                </div>
             <button id="btn-set-budget" class="btn-budget">⚙️ Atur Budget</button>
         </section>
         
@@ -484,19 +570,30 @@ header h1 {
         <section class="reset-section">
             <button id="reset-btn" class="btn-reset">🗑️ Hapus Semua Data</button>
         </section>
-    </section>
+    </div>
     
-        <!-- Modal Set Budget -->
-    <div id="modal-budget" class="modal" style="display:none;">
+    <div id="modal-budget" class="modal">
         <div class="modal-content">
             <h3>🎯 Atur Budget per Kategori</h3>
             <div id="budget-form-container">
-                <!-- Form budget akan muncul di sini -->
-            </div>
+                </div>
             <div class="modal-buttons">
                 <button id="btn-save-budget" class="btn-save">Simpan</button>
                 <button id="btn-close-modal" class="btn-close">Batal</button>
             </div>
+        </div>
+    </div>
+
+    <div id="modal-export" class="modal">
+        <div class="modal-content">
+            <h3>📥 Pilih Format Export</h3>
+            <div class="export-option" onclick="exportToCSV()">
+                📊 <span>Export ke CSV (Excel)</span>
+            </div>
+            <div class="export-option" onclick="exportToText()">
+                📄 <span>Export ke File Teks (.txt)</span>
+            </div>
+            <button class="modal-close" onclick="closeExportModal()">Batal</button>
         </div>
     </div>
 
@@ -538,18 +635,13 @@ const labelKategori = {
     'lainnya-out': 'Lainnya'
 };
 
-// ===== FUNGSI UTAMA =====
-
+// ===== LOAD & SAVE DATA =====
 function loadData() {
     const savedData = localStorage.getItem('keuanganData');
-    if (savedData) {
-        transactions = JSON.parse(savedData);
-    }
+    if (savedData) transactions = JSON.parse(savedData);
     
     const savedBudget = localStorage.getItem('keuanganBudget');
-    if (savedBudget) {
-        budgets = JSON.parse(savedBudget);
-    }
+    if (savedBudget) budgets = JSON.parse(savedBudget);
     
     updateTampilan();
 }
@@ -559,18 +651,17 @@ function simpanData() {
     localStorage.setItem('keuanganBudget', JSON.stringify(budgets));
 }
 
+// ===== TRANSAKSI =====
 function tambahTransaksi(jumlah, tipe, kategori, keterangan) {
     const transaksi = {
         id: Date.now(),
         jumlah: parseInt(jumlah),
         tipe: tipe,
         kategori: kategori,
-        keterengan: keterangan,
-        tanggal: new Date().toLocaleDateString('id-ID', {
-            day: 'numeric',
-            month: 'short',
-            year: 'numeric'
-        })
+        keterangan: keterangan,
+        tanggal: new Date().toLocaleDateString('id-ID', { day: 'numeric', month: 'short', year: 'numeric' }),
+        bulan: new Date().getMonth() + 1,
+        tahun: new Date().getFullYear()
     };
     
     transactions.unshift(transaksi);
@@ -586,31 +677,37 @@ function resetData() {
     }
 }
 
+// ===== FILTER =====
+function getFilteredTransactions() {
+    const filterBulan = document.getElementById('filter-bulan').value;
+    if (filterBulan === 'semua') return transactions;
+    const bulan = parseInt(filterBulan);
+    return transactions.filter(trans => trans.bulan === bulan);
+}
+
+// ===== TAMPILAN =====
 function updateTampilan() {
+    const filtered = getFilteredTransactions();
+    
     let totalPemasukan = 0;
     let totalPengeluaran = 0;
     
-    transactions.forEach(trans => {
-        if (trans.tipe === 'pemasukan') {
-            totalPemasukan += trans.jumlah;
-        } else {
-            totalPengeluaran += trans.jumlah;
-        }
+    filtered.forEach(trans => {
+        if (trans.tipe === 'pemasukan') totalPemasukan += trans.jumlah;
+        else totalPengeluaran += trans.jumlah;
     });
     
-    const saldo = totalPemasukan - totalPengeluaran;
-    
-    document.getElementById('saldo-display').textContent = formatRupiah(saldo);
+    document.getElementById('saldo-display').textContent = formatRupiah(totalPemasukan - totalPengeluaran);
     document.getElementById('pemasukan-display').textContent = formatRupiah(totalPemasukan);
     document.getElementById('pengeluaran-display').textContent = formatRupiah(totalPengeluaran);
     
     const daftarElement = document.getElementById('daftar-transaksi');
     daftarElement.innerHTML = '';
     
-    if (transactions.length === 0) {
+    if (filtered.length === 0) {
         daftarElement.innerHTML = '<p style="text-align:center;color:#888;padding:20px;">Belum ada transaksi</p>';
     } else {
-        transactions.forEach(trans => {
+        filtered.forEach(trans => {
             const li = document.createElement('li');
             li.className = 'transaction-item';
             
@@ -620,7 +717,7 @@ function updateTampilan() {
             
             li.innerHTML = `
                 <div class="transaction-info">
-                    <h4>${emojiKategori} ${trans.keterangan}</h4>
+                    <h4>${emojiKategori} ${trans.keterangan || ''}</h4>
                     <p>${trans.tanggal} • ${getNamaKategori(trans.kategori)}</p>
                 </div>
                 <div class="transaction-amount ${warnaClass}">
@@ -636,56 +733,39 @@ function updateTampilan() {
     updateCharts();
 }
 
+// ===== FORMAT & KATEGORI =====
 function formatRupiah(angka) {
     return 'Rp ' + angka.toString().replace(/\B(?=(\d{3})+(?!\d))/g, '.');
 }
 
 function getEmojiKategori(kategori) {
     const emojiMap = {
-        'gaji': '💼',
-        'bonus': '🎁',
-        'freelance': '💻',
-        'investasi': '📈',
-        'lainnya-in': '📦',
-        'makanan': '🍔',
-        'transportasi': '🚗',
-        'listrik': '💡',
-        'internet': '🌐',
-        'kesehatan': '🏥',
-        'hiburan': '🎮',
-        'belanja': '🛒',
-        'lainnya-out': '📦'
+        'gaji': '💼', 'bonus': '🎁', 'freelance': '💻', 'investasi': '📈', 'lainnya-in': '📦',
+        'makanan': '🍔', 'transportasi': '🚗', 'listrik': '💡', 'internet': '🌐',
+        'kesehatan': '🏥', 'hiburan': '🎮', 'belanja': '🛒', 'lainnya-out': '📦'
     };
     return emojiMap[kategori] || '📦';
 }
 
 function getNamaKategori(kategori) {
     const namaMap = {
-        'gaji': 'Gaji',
-        'bonus': 'Bonus',
-        'freelance': 'Freelance',
-        'investasi': 'Investasi',
-        'lainnya-in': 'Lainnya',
-        'makanan': 'Makanan',
-        'transportasi': 'Transportasi',
-        'listrik': 'Listrik',
-        'internet': 'Internet',
-        'kesehatan': 'Kesehatan',
-        'hiburan': 'Hiburan',
-        'belanja': 'Belanja',
-        'lainnya-out': 'Lainnya'
+        'gaji': 'Gaji', 'bonus': 'Bonus', 'freelance': 'Freelance', 'investasi': 'Investasi', 'lainnya-in': 'Lainnya',
+        'makanan': 'Makanan', 'transportasi': 'Transportasi', 'listrik': 'Listrik', 'internet': 'Internet',
+        'kesehatan': 'Kesehatan', 'hiburan': 'Hiburan', 'belanja': 'Belanja', 'lainnya-out': 'Lainnya'
     };
     return namaMap[kategori] || kategori;
 }
 
+// ===== PENGELUARAN PER KATEGORI =====
 function getPengeluaranPerKategori() {
     const data = {};
+    const filtered = getFilteredTransactions();
     
     ['makanan', 'transportasi', 'listrik', 'internet', 'kesehatan', 'hiburan', 'belanja', 'lainnya-out'].forEach(kat => {
         data[kat] = 0;
     });
     
-    transactions.forEach(trans => {
+    filtered.forEach(trans => {
         if (trans.tipe === 'pengeluaran' && data[trans.kategori] !== undefined) {
             data[trans.kategori] += trans.jumlah;
         }
@@ -694,32 +774,24 @@ function getPengeluaranPerKategori() {
     return data;
 }
 
-// ===== FUNGSI BUDGET =====
-
+// ===== BUDGET =====
 function updateBudgetTampilan() {
     const container = document.getElementById('budget-list');
     const dataPengeluaran = getPengeluaranPerKategori();
     
     let html = '';
-    
     const katList = ['makanan', 'transportasi', 'listrik', 'internet', 'kesehatan', 'hiburan', 'belanja'];
     
     katList.forEach(kat => {
         const budget = budgets[kat] || 0;
         const terpakai = dataPengeluaran[kat] || 0;
         const persen = budget > 0 ? (terpakai / budget) * 100 : 0;
-        const sisa = budget - terpakai;
         
         let statusClass = 'safe';
         let statusText = 'aman';
         
-        if (persen >= 100) {
-            statusClass = 'danger';
-            statusText = 'over';
-        } else if (persen >= 80) {
-            statusClass = 'warning';
-            statusText = 'warning';
-        }
+        if (persen >= 100) { statusClass = 'danger'; statusText = 'over'; }
+        else if (persen >= 80) { statusClass = 'warning'; statusText = 'warning'; }
         
         const emoji = getEmojiKategori(kat);
         const nama = getNamaKategori(kat);
@@ -744,18 +816,13 @@ function updateBudgetTampilan() {
         `;
     });
     
-    if (html === '') {
-        html = '<p style="text-align:center;color:#888;padding:10px;">Belum ada budget</p>';
-    }
-    
+    if (html === '') html = '<p style="text-align:center;color:#888;padding:10px;">Belum ada budget</p>';
     container.innerHTML = html;
 }
 
 function openBudgetModal() {
     const container = document.getElementById('budget-form-container');
-    
     let html = '';
-    
     const katList = ['makanan', 'transportasi', 'listrik', 'internet', 'kesehatan', 'hiburan', 'belanja', 'lainnya-out'];
     
     katList.forEach(kat => {
@@ -780,9 +847,7 @@ function saveBudgetFromModal() {
     
     katList.forEach(kat => {
         const input = document.getElementById('budget-' + kat);
-        if (input && input.value) {
-            budgets[kat] = parseInt(input.value);
-        }
+        if (input && input.value) budgets[kat] = parseInt(input.value);
     });
     
     simpanData();
@@ -790,8 +855,7 @@ function saveBudgetFromModal() {
     document.getElementById('modal-budget').style.display = 'none';
 }
 
-// ===== FUNGSI GRAFIK =====
-
+// ===== GRAFIK =====
 function updateCharts() {
     const dataPengeluaran = getPengeluaranPerKategori();
     const labels = [];
@@ -818,39 +882,20 @@ function updateCharts() {
 
 function updatePieChart(labels, data, colors) {
     const ctx = document.getElementById('pieChart').getContext('2d');
-    
-    if (pieChart) {
-        pieChart.destroy();
-    }
+    if (pieChart) pieChart.destroy();
     
     pieChart = new Chart(ctx, {
         type: 'doughnut',
         data: {
             labels: labels,
-            datasets: [{
-                data: data,
-                backgroundColor: colors,
-                borderWidth: 0
-            }]
+            datasets: [{ data: data, backgroundColor: colors, borderWidth: 0 }]
         },
         options: {
             responsive: true,
             maintainAspectRatio: false,
             plugins: {
-                legend: {
-                    position: 'bottom',
-                    labels: {
-                        boxWidth: 12,
-                        padding: 15,
-                        font: { size: 11 }
-                    }
-                },
-                title: {
-                    display: true,
-                    text: 'Proporsi Pengeluaran per Kategori',
-                    font: { size: 14, weight: 'bold' },
-                    padding: { bottom: 15 }
-                }
+                legend: { position: 'bottom', labels: { boxWidth: 12, padding: 15, font: { size: 11 } } },
+                title: { display: true, text: 'Proporsi Pengeluaran per Kategori', font: { size: 14, weight: 'bold' }, padding: { bottom: 15 } }
             }
         }
     });
@@ -858,51 +903,100 @@ function updatePieChart(labels, data, colors) {
 
 function updateBarChart(labels, data, colors) {
     const ctx = document.getElementById('barChart').getContext('2d');
-    
-    if (barChart) {
-        barChart.destroy();
-    }
+    if (barChart) barChart.destroy();
     
     barChart = new Chart(ctx, {
         type: 'bar',
         data: {
             labels: labels,
-            datasets: [{
-                label: 'Pengeluaran (Rp)',
-                data: data,
-                backgroundColor: colors,
-                borderWidth: 0,
-                borderRadius: 6
-            }]
+            datasets: [{ label: 'Pengeluaran (Rp)', data: data, backgroundColor: colors, borderWidth: 0, borderRadius: 6 }]
         },
         options: {
             responsive: true,
             maintainAspectRatio: false,
             plugins: {
                 legend: { display: false },
-                title: {
-                    display: true,
-                    text: 'Jumlah Pengeluaran per Kategori',
-                    font: { size: 14, weight: 'bold' },
-                    padding: { bottom: 15 }
-                }
+                title: { display: true, text: 'Jumlah Pengeluaran per Kategori', font: { size: 14, weight: 'bold' }, padding: { bottom: 15 } }
             },
             scales: {
-                y: {
-                    beginAtZero: true,
-                    ticks: {
-                        callback: function(value) {
-                            return 'Rp ' + (value / 1000) + 'rb';
-                        }
-                    }
-                }
+                y: { beginAtZero: true, ticks: { callback: function(value) { return 'Rp ' + (value / 1000) + 'rb'; } } }
             }
         }
     });
 }
 
-// ===== EVENT LISTENERS =====
+// ===== EXPORT =====
+function showExportModal() {
+    document.getElementById('modal-export').style.display = 'flex';
+}
 
+function closeExportModal() {
+    document.getElementById('modal-export').style.display = 'none';
+}
+
+function exportToCSV() {
+    const filtered = getFilteredTransactions();
+    
+    if (filtered.length === 0) {
+        alert('Tidak ada data untuk diexport');
+        return;
+    }
+    
+    let csvContent = "data:text/csv;charset=utf-8,Tanggal,Tipe,Kategori,Jumlah,Keterangan\n";
+    
+    filtered.forEach(trans => {
+        csvContent += `${trans.tanggal},${trans.tipe},${trans.kategori},${trans.jumlah},${trans.keterangan}\n`;
+    });
+    
+    const encodedUri = encodeURI(csvContent);
+    const link = document.createElement("a");
+    link.href = encodedUri;
+    link.download = "laporan_keuangan.csv";
+    link.click();
+    
+    closeExportModal();
+}
+
+function exportToText() {
+    const filtered = getFilteredTransactions();
+    
+    if (filtered.length === 0) {
+        alert('Tidak ada data untuk diexport');
+        return;
+    }
+    
+    let totalPemasukan = 0;
+    let totalPengeluaran = 0;
+    
+    filtered.forEach(trans => {
+        if (trans.tipe === 'pemasukan') totalPemasukan += trans.jumlah;
+        else totalPengeluaran += trans.jumlah;
+    });
+    
+    let content = "LAPORAN KEUANGAN\n";
+    content += "====================\n\n";
+    content += "RINGKASAN\n";
+    content += `- Saldo: ${formatRupiah(totalPemasukan - totalPengeluaran)}\n`;
+    content += `- Total Pemasukan: ${formatRupiah(totalPemasukan)}\n`;
+    content += `- Total Pengeluaran: ${formatRupiah(totalPengeluaran)}\n\n`;
+    content += "DETAIL TRANSAKSI\n";
+    content += "----------------\n";
+    
+    filtered.forEach(trans => {
+        const sign = trans.tipe === 'pemasukan' ? '+' : '-';
+        content += `${trans.tanggal} | ${getNamaKategori(trans.kategori)} | ${sign}${formatRupiah(trans.jumlah)} | ${trans.keterangan}\n`;
+    });
+    
+    const blob = new Blob([content], { type: 'text/plain' });
+    const link = document.createElement("a");
+    link.href = URL.createObjectURL(blob);
+    link.download = "laporan_keuangan.txt";
+    link.click();
+    
+    closeExportModal();
+}
+
+// ===== EVENT LISTENERS =====
 document.getElementById('form-transaksi').addEventListener('submit', function(e) {
     e.preventDefault();
     
@@ -913,7 +1007,6 @@ document.getElementById('form-transaksi').addEventListener('submit', function(e)
     
     if (jumlah && keterangan) {
         const kategoriFix = kategori || (tipe === 'pemasukan' ? 'lainnya-in' : 'lainnya-out');
-        
         tambahTransaksi(jumlah, tipe, kategoriFix, keterangan);
         
         document.getElementById('jumlah').value = '';
@@ -923,31 +1016,21 @@ document.getElementById('form-transaksi').addEventListener('submit', function(e)
     }
 });
 
-document.getElementById('reset-btn').addEventListener('click', function() {
-    resetData();
-});
-
-document.getElementById('btn-set-budget').addEventListener('click', function() {
-    openBudgetModal();
-});
-
-document.getElementById('btn-save-budget').addEventListener('click', function() {
-    saveBudgetFromModal();
-});
-
+document.getElementById('reset-btn').addEventListener('click', resetData);
+document.getElementById('btn-set-budget').addEventListener('click', openBudgetModal);
+document.getElementById('btn-save-budget').addEventListener('click', saveBudgetFromModal);
 document.getElementById('btn-close-modal').addEventListener('click', function() {
     document.getElementById('modal-budget').style.display = 'none';
 });
+document.getElementById('btn-export').addEventListener('click', showExportModal);
+document.getElementById('filter-bulan').addEventListener('change', updateTampilan);
 
+// PWA Service Worker Registration
 if ('serviceWorker' in navigator) {
     window.addEventListener('load', function() {
         navigator.serviceWorker.register('./service-worker.js')
-            .then(function(registration) {
-                console.log('ServiceWorker registration successful:', registration.scope);
-            })
-            .catch(function(error) {
-                console.log('ServiceWorker registration failed:', error);
-            });
+            .then(function(res) { console.log('SW Registered', res.scope); })
+            .catch(function(err) { console.log('SW Failed', err); });
     });
 }
 
