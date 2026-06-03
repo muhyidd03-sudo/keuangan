@@ -1,0 +1,22 @@
+{
+    "name": "Keuangan Pribadi",
+    "short_name": "Keuangan",
+    "description": "Aplikasi pengelolaan keuangan pribadi",
+    "start_url": "./index.html",
+    "display": "standalone",
+    "background_color": "#f5f5f5",
+    "theme_color": "#667eea",
+    "orientation": "portrait",
+    "icons": [
+        {
+            "src": "https://cdn-icons-png.flaticon.com/512/2490/2490408.png",
+            "sizes": "192x192",
+            "type": "image/png"
+        },
+        {
+            "src": "https://cdn-icons-png.flaticon.com/512/2490/2490408.png",
+            "sizes": "512x512",
+            "type": "image/png"
+        }
+    ]
+}

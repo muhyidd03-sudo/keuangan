@@ -1,0 +1,958 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Keuangan Pribadi</title>
+    <!-- TAMBAHKAN:PWA Meta Tags -->
+    <meta name="theme-color" content="#667eea">
+    <meta name="description" content="Aplikasi pengelolaan keuangan pribadi">
+    <link rel="manifest" href="manifest.json">
+    <link rel="apple-touch-icon" href="https://cdn-icons-png.flaticon.com/512/2490/2490408.png">
+    
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <style>
+* {
+    margin: 0;
+    padding: 0;
+    box-sizing: border-box;
+    font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+}
+
+body {
+    background-color: #f5f5f5;
+    min-height: 100vh;
+    padding: 20px;
+}
+
+.app-container {
+    max-width: 480px;
+    margin: 0 auto;
+}
+
+header {
+    text-align: center;
+    margin-bottom: 20px;
+}
+
+header h1 {
+    color: #333;
+    font-size: 24px;
+}
+
+.card {
+    background: white;
+    border-radius: 12px;
+    padding: 20px;
+    box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+}
+
+.card p {
+    font-size: 14px;
+    color: #666;
+    margin-bottom: 5px;
+}
+
+.card h2, .card h3 {
+    font-size: 20px;
+}
+
+.saldo {
+    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+    color: white;
+    text-align: center;
+    margin-bottom: 15px;
+}
+
+.saldo p {
+    color: rgba(255,255,255,0.8);
+}
+
+.saldo h2 {
+    color: white;
+    font-size: 28px;
+}
+
+.card-row {
+    display: flex;
+    gap: 10px;
+    margin-bottom: 20px;
+}
+
+.card-row .card {
+    flex: 1;
+    text-align: center;
+}
+
+.card-row .card:first-child h3 {
+    color: #10b981;
+}
+
+.card-row .card:last-child h3 {
+    color: #ef4444;
+}
+
+.chart-section {
+    background: white;
+    border-radius: 12px;
+    padding: 20px;
+    margin-bottom: 20px;
+    box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+}
+
+.chart-section h3 {
+    margin-bottom: 15px;
+    color: #333;
+}
+
+.chart-container {
+    margin-bottom: 20px;
+    position: relative;
+    height: 250px;
+}
+
+.chart-container:last-child {
+    margin-bottom: 0;
+}
+
+.form-section {
+    background: white;
+    border-radius: 12px;
+    padding: 20px;
+    margin-bottom: 20px;
+    box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+}
+
+.form-section h3 {
+    margin-bottom: 15px;
+    color: #333;
+}
+
+#form-transaksi {
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+}
+
+#form-transaksi input,
+#form-transaksi select {
+    padding: 12px;
+    border: 1px solid #ddd;
+    border-radius: 8px;
+    font-size: 16px;
+}
+
+#form-transaksi button {
+    padding: 12px;
+    background: #667eea;
+    color: white;
+    border: none;
+    border-radius: 8px;
+    font-size: 16px;
+    font-weight: bold;
+    cursor: pointer;
+    transition: background 0.3s;
+}
+
+#form-transaksi button:hover {
+    background: #5568d3;
+}
+
+.transaction-section {
+    background: white;
+    border-radius: 12px;
+    padding: 20px;
+    box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+}
+
+.transaction-section h3 {
+    margin-bottom: 15px;
+    color: #333;
+}
+
+#daftar-transaksi {
+    list-style: none;
+}
+
+.transaction-item {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 12px 0;
+    border-bottom: 1px solid #eee;
+}
+
+.transaction-item:last-child {
+    border-bottom: none;
+}
+
+.transaction-info h4 {
+    font-size: 16px;
+    color: #333;
+    margin-bottom: 3px;
+}
+
+.transaction-info p {
+    font-size: 12px;
+    color: #888;
+}
+
+.transaction-amount {
+    font-size: 16px;
+    font-weight: bold;
+}
+
+.transaction-amount.pemasukan {
+    color: #10b981;
+}
+
+.transaction-amount.pengeluaran {
+    color: #ef4444;
+}
+
+.reset-section {
+    margin-top: 20px;
+    text-align: center;
+}
+
+.btn-reset {
+    padding: 10px 20px;
+    background: #ef4444;
+    color: white;
+    border: none;
+    border-radius: 8px;
+    font-size: 14px;
+    cursor: pointer;
+}
+
+.btn-reset:hover {
+    background: #dc2626;
+}
+
+/* ===== BUDGET SECTION ===== */
+.budget-section {
+    background: white;
+    border-radius: 12px;
+    padding: 20px;
+    margin-bottom: 20px;
+    box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+}
+
+.budget-section h3 {
+    margin-bottom: 15px;
+    color: #333;
+}
+
+.budget-item {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 10px 0;
+    border-bottom: 1px solid #eee;
+}
+
+.budget-item:last-child {
+    border-bottom: none;
+}
+
+.budget-info {
+    flex: 1;
+}
+
+.budget-info h4 {
+    font-size: 14px;
+    color: #333;
+    margin-bottom: 3px;
+}
+
+.budget-info p {
+    font-size: 12px;
+    color: #888;
+}
+
+.budget-progress {
+    width: 100px;
+    text-align: right;
+}
+
+.budget-progress .progress-bar {
+    height: 8px;
+    background: #eee;
+    border-radius: 4px;
+    overflow: hidden;
+    margin-top: 5px;
+}
+
+.budget-progress .progress-fill {
+    height: 100%;
+    border-radius: 4px;
+    transition: width 0.3s;
+}
+
+.budget-progress .progress-fill.safe {
+    background: #10b981;
+}
+
+.budget-progress .progress-fill.warning {
+    background: #FFCE56;
+}
+
+.budget-progress .progress-fill.danger {
+    background: #ef4444;
+}
+
+.budget-amount {
+    font-size: 12px;
+    color: #666;
+}
+
+.budget-amount.over {
+    color: #ef4444;
+    font-weight: bold;
+}
+
+.btn-budget {
+    width: 100%;
+    padding: 12px;
+    background: #667eea;
+    color: white;
+    border: none;
+    border-radius: 8px;
+    font-size: 14px;
+    cursor: pointer;
+    margin-top: 10px;
+}
+
+.btn-budget:hover {
+    background: #5568d3;
+}
+
+/* ===== MODAL ===== */
+.modal {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background: rgba(0,0,0,0.5);
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    z-index: 1000;
+}
+
+.modal-content {
+    background: white;
+    border-radius: 12px;
+    padding: 20px;
+    width: 90%;
+    max-width: 400px;
+    max-height: 80vh;
+    overflow-y: auto;
+}
+
+.modal-content h3 {
+    margin-bottom: 15px;
+    color: #333;
+}
+
+.budget-form-item {
+    margin-bottom: 15px;
+}
+
+.budget-form-item label {
+    display: block;
+    font-size: 14px;
+    color: #333;
+    margin-bottom: 5px;
+}
+
+.budget-form-item input {
+    width: 100%;
+    padding: 10px;
+    border: 1px solid #ddd;
+    border-radius: 8px;
+    font-size: 14px;
+}
+
+.modal-buttons {
+    display: flex;
+    gap: 10px;
+    margin-top: 20px;
+}
+
+.btn-save {
+    flex: 1;
+    padding: 12px;
+    background: #10b981;
+    color: white;
+    border: none;
+    border-radius: 8px;
+    font-size: 14px;
+    cursor: pointer;
+}
+
+.btn-close {
+    flex: 1;
+    padding: 12px;
+    background: #eee;
+    color: #333;
+    border: none;
+    border-radius: 8px;
+    font-size: 14px;
+    cursor: pointer;
+}
+    </style>
+</head>
+<body>
+    <div class="app-container">
+        <header>
+            <h1>💰 Keuangan Saya</h1>
+        </header>
+
+        <section class="summary">
+            <div class="card saldo">
+                <p>Saldo Saat Ini</p>
+                <h2 id="saldo-display">Rp 0</h2>
+            </div>
+            <div class="card-row">
+                <div class="card">
+                    <p>Pemasukan</p>
+                    <h3 id="pemasukan-display">Rp 0</h3>
+                </div>
+                <div class="card">
+                    <p>Pengeluaran</p>
+                    <h3 id="pengeluaran-display">Rp 0</h3>
+                </div>
+            </div>
+        </section>
+
+        <section class="chart-section">
+            <h3>📊 Grafik Pengeluaran</h3>
+            <div class="chart-container">
+                <canvas id="pieChart"></canvas>
+            </div>
+            <div class="chart-container">
+                <canvas id="barChart"></canvas>
+            </div>
+        </section>
+
+        <section class="form-section">
+            <h3>Tambah Transaksi</h3>
+            <form id="form-transaksi">
+                <input type="number" id="jumlah" placeholder="Jumlah uang" required>
+                <select id="tipe">
+                    <option value="pemasukan">Pemasukan</option>
+                    <option value="pengeluaran">Pengeluaran</option>
+                </select>
+                <select id="kategori">
+                    <option value="">Pilih Kategori</option>
+                    <option value="gaji">💼 Gaji</option>
+                    <option value="bonus">🎁 Bonus</option>
+                    <option value="freelance">💻 Freelance</option>
+                    <option value="investasi">📈 Investasi</option>
+                    <option value="lainnya-in">📦 Lainnya</option>
+                    <option value="makanan">🍔 Makanan</option>
+                    <option value="transportasi">🚗 Transportasi</option>
+                    <option value="listrik">💡 Listrik</option>
+                    <option value="internet">🌐 Internet/Pulsa</option>
+                    <option value="kesehatan">🏥 Kesehatan</option>
+                    <option value="hiburan">🎮 Hiburan</option>
+                    <option value="belanja">🛒 Belanja</option>
+                    <option value="lainnya-out">📦 Lainnya</option>
+                </select>
+                <input type="text" id="keterangan" placeholder="Keterangan" required>
+                <button type="submit">Tambah</button>
+            </form>
+        </section>
+
+        <!-- Section Budget -->
+        <section class="budget-section">
+            <h3>🎯 Anggaran Bulanan</h3>
+            <div id="budget-list">
+                <!-- Budget akan muncul di sini -->
+            </div>
+            <button id="btn-set-budget" class="btn-budget">⚙️ Atur Budget</button>
+        </section>
+        
+        <section class="transaction-section">
+            <h3>Riwayat Transaksi</h3>
+            <ul id="daftar-transaksi">
+            </ul>
+        </section>
+
+        <section class="reset-section">
+            <button id="reset-btn" class="btn-reset">🗑️ Hapus Semua Data</button>
+        </section>
+    </section>
+    
+        <!-- Modal Set Budget -->
+    <div id="modal-budget" class="modal" style="display:none;">
+        <div class="modal-content">
+            <h3>🎯 Atur Budget per Kategori</h3>
+            <div id="budget-form-container">
+                <!-- Form budget akan muncul di sini -->
+            </div>
+            <div class="modal-buttons">
+                <button id="btn-save-budget" class="btn-save">Simpan</button>
+                <button id="btn-close-modal" class="btn-close">Batal</button>
+            </div>
+        </div>
+    </div>
+
+    <script>
+let transactions = [];
+let pieChart = null;
+let barChart = null;
+
+let budgets = {
+    'makanan': 500000,
+    'transportasi': 200000,
+    'listrik': 150000,
+    'internet': 100000,
+    'kesehatan': 200000,
+    'hiburan': 150000,
+    'belanja': 300000,
+    'lainnya-out': 100000
+};
+
+const warnaChart = {
+    'makanan': '#FF6384',
+    'transportasi': '#36A2EB',
+    'listrik': '#FFCE56',
+    'internet': '#4BC0C0',
+    'kesehatan': '#9966FF',
+    'hiburan': '#FF9F40',
+    'belanja': '#C9CBCF',
+    'lainnya-out': '#663300'
+};
+
+const labelKategori = {
+    'makanan': 'Makanan',
+    'transportasi': 'Transportasi',
+    'listrik': 'Listrik',
+    'internet': 'Internet',
+    'kesehatan': 'Kesehatan',
+    'hiburan': 'Hiburan',
+    'belanja': 'Belanja',
+    'lainnya-out': 'Lainnya'
+};
+
+// ===== FUNGSI UTAMA =====
+
+function loadData() {
+    const savedData = localStorage.getItem('keuanganData');
+    if (savedData) {
+        transactions = JSON.parse(savedData);
+    }
+    
+    const savedBudget = localStorage.getItem('keuanganBudget');
+    if (savedBudget) {
+        budgets = JSON.parse(savedBudget);
+    }
+    
+    updateTampilan();
+}
+
+function simpanData() {
+    localStorage.setItem('keuanganData', JSON.stringify(transactions));
+    localStorage.setItem('keuanganBudget', JSON.stringify(budgets));
+}
+
+function tambahTransaksi(jumlah, tipe, kategori, keterangan) {
+    const transaksi = {
+        id: Date.now(),
+        jumlah: parseInt(jumlah),
+        tipe: tipe,
+        kategori: kategori,
+        keterengan: keterangan,
+        tanggal: new Date().toLocaleDateString('id-ID', {
+            day: 'numeric',
+            month: 'short',
+            year: 'numeric'
+        })
+    };
+    
+    transactions.unshift(transaksi);
+    simpanData();
+    updateTampilan();
+}
+
+function resetData() {
+    if (confirm('Yakin ingin menghapus semua data?')) {
+        transactions = [];
+        simpanData();
+        updateTampilan();
+    }
+}
+
+function updateTampilan() {
+    let totalPemasukan = 0;
+    let totalPengeluaran = 0;
+    
+    transactions.forEach(trans => {
+        if (trans.tipe === 'pemasukan') {
+            totalPemasukan += trans.jumlah;
+        } else {
+            totalPengeluaran += trans.jumlah;
+        }
+    });
+    
+    const saldo = totalPemasukan - totalPengeluaran;
+    
+    document.getElementById('saldo-display').textContent = formatRupiah(saldo);
+    document.getElementById('pemasukan-display').textContent = formatRupiah(totalPemasukan);
+    document.getElementById('pengeluaran-display').textContent = formatRupiah(totalPengeluaran);
+    
+    const daftarElement = document.getElementById('daftar-transaksi');
+    daftarElement.innerHTML = '';
+    
+    if (transactions.length === 0) {
+        daftarElement.innerHTML = '<p style="text-align:center;color:#888;padding:20px;">Belum ada transaksi</p>';
+    } else {
+        transactions.forEach(trans => {
+            const li = document.createElement('li');
+            li.className = 'transaction-item';
+            
+            const sign = trans.tipe === 'pemasukan' ? '+' : '-';
+            const warnaClass = trans.tipe === 'pemasukan' ? 'pemasukan' : 'pengeluaran';
+            const emojiKategori = getEmojiKategori(trans.kategori);
+            
+            li.innerHTML = `
+                <div class="transaction-info">
+                    <h4>${emojiKategori} ${trans.keterangan}</h4>
+                    <p>${trans.tanggal} • ${getNamaKategori(trans.kategori)}</p>
+                </div>
+                <div class="transaction-amount ${warnaClass}">
+                    ${sign}${formatRupiah(trans.jumlah)}
+                </div>
+            `;
+            
+            daftarElement.appendChild(li);
+        });
+    }
+    
+    updateBudgetTampilan();
+    updateCharts();
+}
+
+function formatRupiah(angka) {
+    return 'Rp ' + angka.toString().replace(/\B(?=(\d{3})+(?!\d))/g, '.');
+}
+
+function getEmojiKategori(kategori) {
+    const emojiMap = {
+        'gaji': '💼',
+        'bonus': '🎁',
+        'freelance': '💻',
+        'investasi': '📈',
+        'lainnya-in': '📦',
+        'makanan': '🍔',
+        'transportasi': '🚗',
+        'listrik': '💡',
+        'internet': '🌐',
+        'kesehatan': '🏥',
+        'hiburan': '🎮',
+        'belanja': '🛒',
+        'lainnya-out': '📦'
+    };
+    return emojiMap[kategori] || '📦';
+}
+
+function getNamaKategori(kategori) {
+    const namaMap = {
+        'gaji': 'Gaji',
+        'bonus': 'Bonus',
+        'freelance': 'Freelance',
+        'investasi': 'Investasi',
+        'lainnya-in': 'Lainnya',
+        'makanan': 'Makanan',
+        'transportasi': 'Transportasi',
+        'listrik': 'Listrik',
+        'internet': 'Internet',
+        'kesehatan': 'Kesehatan',
+        'hiburan': 'Hiburan',
+        'belanja': 'Belanja',
+        'lainnya-out': 'Lainnya'
+    };
+    return namaMap[kategori] || kategori;
+}
+
+function getPengeluaranPerKategori() {
+    const data = {};
+    
+    ['makanan', 'transportasi', 'listrik', 'internet', 'kesehatan', 'hiburan', 'belanja', 'lainnya-out'].forEach(kat => {
+        data[kat] = 0;
+    });
+    
+    transactions.forEach(trans => {
+        if (trans.tipe === 'pengeluaran' && data[trans.kategori] !== undefined) {
+            data[trans.kategori] += trans.jumlah;
+        }
+    });
+    
+    return data;
+}
+
+// ===== FUNGSI BUDGET =====
+
+function updateBudgetTampilan() {
+    const container = document.getElementById('budget-list');
+    const dataPengeluaran = getPengeluaranPerKategori();
+    
+    let html = '';
+    
+    const katList = ['makanan', 'transportasi', 'listrik', 'internet', 'kesehatan', 'hiburan', 'belanja'];
+    
+    katList.forEach(kat => {
+        const budget = budgets[kat] || 0;
+        const terpakai = dataPengeluaran[kat] || 0;
+        const persen = budget > 0 ? (terpakai / budget) * 100 : 0;
+        const sisa = budget - terpakai;
+        
+        let statusClass = 'safe';
+        let statusText = 'aman';
+        
+        if (persen >= 100) {
+            statusClass = 'danger';
+            statusText = 'over';
+        } else if (persen >= 80) {
+            statusClass = 'warning';
+            statusText = 'warning';
+        }
+        
+        const emoji = getEmojiKategori(kat);
+        const nama = getNamaKategori(kat);
+        
+        html += `
+            <div class="budget-item">
+                <div class="budget-info">
+                    <h4>${emoji} ${nama}</h4>
+                    <p class="budget-amount ${statusText === 'over' ? 'over' : ''}">
+                        ${formatRupiah(terpakai)} / ${formatRupiah(budget)}
+                    </p>
+                </div>
+                <div class="budget-progress">
+                    <p class="budget-amount ${statusText === 'over' ? 'over' : ''}">
+                        ${persen > 100 ? '⚠️ Over!' : Math.round(persen) + '%'}
+                    </p>
+                    <div class="progress-bar">
+                        <div class="progress-fill ${statusClass}" style="width: ${Math.min(persen, 100)}%"></div>
+                    </div>
+                </div>
+            </div>
+        `;
+    });
+    
+    if (html === '') {
+        html = '<p style="text-align:center;color:#888;padding:10px;">Belum ada budget</p>';
+    }
+    
+    container.innerHTML = html;
+}
+
+function openBudgetModal() {
+    const container = document.getElementById('budget-form-container');
+    
+    let html = '';
+    
+    const katList = ['makanan', 'transportasi', 'listrik', 'internet', 'kesehatan', 'hiburan', 'belanja', 'lainnya-out'];
+    
+    katList.forEach(kat => {
+        const emoji = getEmojiKategori(kat);
+        const nama = getNamaKategori(kat);
+        const nilai = budgets[kat] || 0;
+        
+        html += `
+            <div class="budget-form-item">
+                <label>${emoji} ${nama}</label>
+                <input type="number" id="budget-${kat}" value="${nilai}" placeholder="Masukkan budget">
+            </div>
+        `;
+    });
+    
+    container.innerHTML = html;
+    document.getElementById('modal-budget').style.display = 'flex';
+}
+
+function saveBudgetFromModal() {
+    const katList = ['makanan', 'transportasi', 'listrik', 'internet', 'kesehatan', 'hiburan', 'belanja', 'lainnya-out'];
+    
+    katList.forEach(kat => {
+        const input = document.getElementById('budget-' + kat);
+        if (input && input.value) {
+            budgets[kat] = parseInt(input.value);
+        }
+    });
+    
+    simpanData();
+    updateTampilan();
+    document.getElementById('modal-budget').style.display = 'none';
+}
+
+// ===== FUNGSI GRAFIK =====
+
+function updateCharts() {
+    const dataPengeluaran = getPengeluaranPerKategori();
+    const labels = [];
+    const data = [];
+    const colors = [];
+    
+    Object.keys(dataPengeluaran).forEach(kat => {
+        if (dataPengeluaran[kat] > 0) {
+            labels.push(labelKategori[kat]);
+            data.push(dataPengeluaran[kat]);
+            colors.push(warnaChart[kat]);
+        }
+    });
+    
+    if (data.length === 0) {
+        labels.push('Belum ada data');
+        data.push(1);
+        colors.push('#e0e0e0');
+    }
+    
+    updatePieChart(labels, data, colors);
+    updateBarChart(labels, data, colors);
+}
+
+function updatePieChart(labels, data, colors) {
+    const ctx = document.getElementById('pieChart').getContext('2d');
+    
+    if (pieChart) {
+        pieChart.destroy();
+    }
+    
+    pieChart = new Chart(ctx, {
+        type: 'doughnut',
+        data: {
+            labels: labels,
+            datasets: [{
+                data: data,
+                backgroundColor: colors,
+                borderWidth: 0
+            }]
+        },
+        options: {
+            responsive: true,
+            maintainAspectRatio: false,
+            plugins: {
+                legend: {
+                    position: 'bottom',
+                    labels: {
+                        boxWidth: 12,
+                        padding: 15,
+                        font: { size: 11 }
+                    }
+                },
+                title: {
+                    display: true,
+                    text: 'Proporsi Pengeluaran per Kategori',
+                    font: { size: 14, weight: 'bold' },
+                    padding: { bottom: 15 }
+                }
+            }
+        }
+    });
+}
+
+function updateBarChart(labels, data, colors) {
+    const ctx = document.getElementById('barChart').getContext('2d');
+    
+    if (barChart) {
+        barChart.destroy();
+    }
+    
+    barChart = new Chart(ctx, {
+        type: 'bar',
+        data: {
+            labels: labels,
+            datasets: [{
+                label: 'Pengeluaran (Rp)',
+                data: data,
+                backgroundColor: colors,
+                borderWidth: 0,
+                borderRadius: 6
+            }]
+        },
+        options: {
+            responsive: true,
+            maintainAspectRatio: false,
+            plugins: {
+                legend: { display: false },
+                title: {
+                    display: true,
+                    text: 'Jumlah Pengeluaran per Kategori',
+                    font: { size: 14, weight: 'bold' },
+                    padding: { bottom: 15 }
+                }
+            },
+            scales: {
+                y: {
+                    beginAtZero: true,
+                    ticks: {
+                        callback: function(value) {
+                            return 'Rp ' + (value / 1000) + 'rb';
+                        }
+                    }
+                }
+            }
+        }
+    });
+}
+
+// ===== EVENT LISTENERS =====
+
+document.getElementById('form-transaksi').addEventListener('submit', function(e) {
+    e.preventDefault();
+    
+    const jumlah = document.getElementById('jumlah').value;
+    const tipe = document.getElementById('tipe').value;
+    const kategori = document.getElementById('kategori').value;
+    const keterangan = document.getElementById('keterangan').value;
+    
+    if (jumlah && keterangan) {
+        const kategoriFix = kategori || (tipe === 'pemasukan' ? 'lainnya-in' : 'lainnya-out');
+        
+        tambahTransaksi(jumlah, tipe, kategoriFix, keterangan);
+        
+        document.getElementById('jumlah').value = '';
+        document.getElementById('kategori').value = '';
+        document.getElementById('keterangan').value = '';
+        document.getElementById('tipe').value = 'pemasukan';
+    }
+});
+
+document.getElementById('reset-btn').addEventListener('click', function() {
+    resetData();
+});
+
+document.getElementById('btn-set-budget').addEventListener('click', function() {
+    openBudgetModal();
+});
+
+document.getElementById('btn-save-budget').addEventListener('click', function() {
+    saveBudgetFromModal();
+});
+
+document.getElementById('btn-close-modal').addEventListener('click', function() {
+    document.getElementById('modal-budget').style.display = 'none';
+});
+
+if ('serviceWorker' in navigator) {
+    window.addEventListener('load', function() {
+        navigator.serviceWorker.register('./service-worker.js')
+            .then(function(registration) {
+                console.log('ServiceWorker registration successful:', registration.scope);
+            })
+            .catch(function(error) {
+                console.log('ServiceWorker registration failed:', error);
+            });
+    });
+}
+
+// ===== MULAI APLIKASI =====
+loadData();
+    </script>
+</body>
+</html>
