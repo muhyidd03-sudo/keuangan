@@ -8,7 +8,6 @@
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/xlsx@0.18.5/dist/xlsx.full.min.js"></script>
     <style>
-        /* CSS tetap sama agar desain tidak berubah */
         * { margin: 0; padding: 0; box-sizing: border-box; font-family: 'Segoe UI', sans-serif; }
         body { background-color: #f5f5f5; min-height: 100vh; padding: 20px; }
         .app-container { max-width: 480px; margin: 0 auto; }
@@ -39,17 +38,18 @@
 
         <div id="main-app-view" style="display: none;">
             <h1>Dashboard Keuangan</h1>
-            <button onclick="handleLogout()">Keluar</button>
-            </div>
+            <p>Anda berhasil login!</p>
+            <button onclick="handleLogout()" style="padding: 10px; margin-top: 10px;">Keluar</button>
+        </div>
     </div>
 
     <script>
-        // 1. Konfigurasi Supabase
+        // Inisialisasi Supabase
         const SUPABASE_URL = "https://oiiikylwdlpjxvevjeya.supabase.co";
         const SUPABASE_ANON_KEY = "sb_publishable_zFBrhYVr9wFL0zClDqCUJA_Kh6K_9wF";
         const supabase = supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
 
-        // 2. Fungsi Pindah Tab Auth
+        // Fungsi Tab
         let currentAuthMode = 'login';
         function switchAuthTab(mode) {
             currentAuthMode = mode;
@@ -59,7 +59,7 @@
             document.getElementById('btn-auth-submit').textContent = mode === 'login' ? 'Masuk' : 'Daftar';
         }
 
-        // 3. Logika Submit Auth
+        // Login / Daftar
         document.getElementById('form-auth').addEventListener('submit', async function(e) {
             e.preventDefault();
             const email = document.getElementById('auth-email').value;
@@ -71,11 +71,11 @@
             } else {
                 const { error } = await supabase.auth.signUp({ email, password });
                 if (error) alert("Gagal Mendaftar: " + error.message);
-                else alert("Pendaftaran Berhasil! Silakan masuk.");
+                else alert("Pendaftaran Berhasil! Silakan cek email/masuk.");
             }
         });
 
-        // 4. Deteksi Login
+        // Deteksi Status
         supabase.auth.onAuthStateChange((event, session) => {
             if (session) {
                 document.getElementById('auth-view').style.display = 'none';
